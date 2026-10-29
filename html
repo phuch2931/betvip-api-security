@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎲 BETVIP · AI ROBOT TOOL (Patched)</title>
+
+<!-- Basic CSP meta (note: server-side CSP is stronger) -->
+<meta http-equiv="Content-Security-Policy" 
+  content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; frame-src https://play.betvip.fit https:; connect-src 'self' https:;">
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #111118;
+    --border:   #1e1e2e;
+    --gold:     #dfbd69;
+    --gold-dim: rgba(223,189,105,0.15);
+    --tai:      #00e5ff;
+    --xiu:      #ff3d5a;
+    --text:     #e0e0e0;
+    --muted:    #555;
+    --radius:   14px;
+  }
+  html, body {
+    width:100%; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Segoe UI', system-ui, sans-serif;
+    overflow:hidden;
+  }
+
+  /* ── SCREEN LAYERS ── */
+  .screen {
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:20px;
+    transition:opacity 0.25s;
+  }
+  .screen.hidden { display:none; }
+
+  /* ══ API SELECTOR SCREEN ══ */
+  #select-screen {
+    background:var(--bg);
+    gap:20px;
+  }
+
+  .sel-header { text-align:center; }
+  .sel-logo {
+    font-size:42px;
+    line-height:1;
+    filter:drop-shadow(0 0 18px rgba(223,189,105,0.5));
+  }
+  .sel-title {
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:3px;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-top:8px;
+    text-shadow:0 0 20px rgba(223,189,105,0.4);
+  }
+  .sel-sub {
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:2px;
+    margin-top:4px;
+    text-transform:uppercase;
+  }
+
+  .api-cards {
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    width:100%;
+    max-width:340px;
+  }
+
+  .api-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+    overflow:hidden;
+  }
+  .api-card::before {
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, var(--gold-dim) 0%, transparent 60%);
+    opacity:0;
+    transition:opacity 0.2s;
+  }
+  .api-card:hover::before, .api-card:active::before { opacity:1; }
+  .api-card:hover {
+    border-color:var(--gold);
+    box-shadow:0 0 20px rgba(223,189,105,0.2);
+    transform:translateY(-2px);
+  }
+  .api-card:active { transform:translateY(0); }
+
+  .card-icon { font-size:32px; flex-shrink:0; }
+  .card-info { flex:1; }
+  .card-name {
+    font-size:16px;
+    font-weight:700;
+    color:var(--text);
+    letter-spacing:0.5px;
+  }
+  .card-desc {
+    font-size:11px;
+    color:var(--muted);
+    margin-top:3px;
+    letter-spacing:0.5px;
+  }
+  .card-badge {
+    background:var(--gold-dim);
+    border:1px solid rgba(223,189,105,0.3);
+    color:var(--gold);
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+    padding:3px 8px;
+    border-radius:20px;
+    text-transform:uppercase;
+    flex-shrink:0;
+  }
+
+  .sel-footer {
+    font-size:9px;
+    color:#333;
+    letter-spacing:1px;
+    text-align:center;
+  }
+
+  /* ══ GAME SCREEN ══ */
+  #game-screen {
+    padding:0;
+    background:#000;
+  }
+
+  #game-frame {
+    width:100%; height:100%;
+    border:none;
+    display:block;
+  }
+
+  /* ══ ROBOT WIDGET ══ */
+  #robot-widget {
+    position:fixed;
+    left:16px; top:80px;
+    z-index:9999;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    display:none;
+  }
+  #robot-widget:active { cursor:grabbing; }
+
+  .robot-inner {
+    background:rgba(10,10,15,0.92);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:12px;
+    width:130px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(223,189,105,0.08);
+  }
+  .robot-platform {
+    font-size:8px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    color:var(--gold);
+    text-transform:uppercase;
+    text-align:center;
+    opacity:0.8;
+  }
+
+  .robot-img {
+    width:56px;
+    height:56px;
+    object-fit:contain;
+    border-radius:8px;
+    pointer-events:none;
+  }
+
+  .led-row {
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .led {
+    width:7px; height:7px;
+    border-radius:50%;
+    background:#222;
+    transition:all 0.3s;
+    flex-shrink:0;
+  }
+  .led.on {
+    background:#00ff88;
+    box-shadow:0 0 8px #00ff88;
+    animation:pulse-led 1.5s infinite;
+  }
+  @keyframes pulse-led {
+    0%,100% { opacity:1; }
+    50%      { opacity:0.4; }
+  }
+  .phien-label {
+    font-size:9px;
+    color:var(--muted);
+    letter-spacing:0.5px;
+  }
+  .phien-label.loading::after {
+    content:'';
+    display:inline-block;
+    width:12px;
+    text-align:left;
+    animation:dots 1.2s steps(3,end) infinite;
+  }
+  @keyframes dots {
+    0%   { content:''; }
+    33%  { content:'.'; }
+    66%  { content:'..'; }
+    100% { content:'...'; }
+  }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    width:100%;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px;
+    text-align:center;
+    transition:all 0.3s;
+  }
+  .result-box.tai  { border-color:var(--tai);  box-shadow:0 0 16px rgba(0,229,255,0.25); }
+  .result-box.xiu  { border-color:var(--xiu);  box-shadow:0 0 16px rgba(255,61,90,0.25); }
+  .result-box.special { border-color:var(--gold); box-shadow:0 0 16px rgba(223,189,105,0.25); }
+
+  .result-label {
+    font-size:7px;
+    color:var(--muted);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  .result-val {
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:1px;
+    line-height:1;
+    color:var(--text);
+    transition:all 0.3s;
+  }
+  .result-val.tai     { color:var(--tai);  text-shadow:0 0 16px var(--tai); }
+  .result-val.xiu     { color:var(--xiu);  text-shadow:0 0 16px var(--xiu); }
+  .result-val.special { color:var(--gold); text-shadow:0 0 14px var(--gold); font-size:14px; letter-spacing:0; }
+
+  @keyframes scan-anim {
+    0%,100% { opacity:1; }
+    50%      { opacity:0.3; }
+  }
+  .loading-anim { animation:scan-anim 1s infinite; color:var(--muted) !important; font-size:14px !important; }
+
+  .result-sub {
+    font-size:9px;
+    font-weight:700;
+    color:var(--muted);
+    margin-top:4px;
+    letter-spacing:0.5px;
+  }
+  .result-sub.tai { color:var(--tai); }
+  .result-sub.xiu { color:var(--xiu); }
+
+  .result-conf {
+    font-size:9px;
+    color:#444;
+    margin-top:3px;
+  }
+  .result-conf span { color:#888; font-weight:700; }
+
+  /* ══ CONTROLS ══ */
+  #ctrl-panel {
+    position:fixed;
+    bottom:20px; right:16px;
+    z-index:9998;
+    display:none;
+    flex-direction:column;
+    gap:8px;
+  }
+  .ctrl-btn {
+    width:42px; height:42px;
+    border-radius:50%;
+    background:rgba(10,10,15,0.9);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:18px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(10px);
+    transition:all 0.2s;
+    box-shadow:0 4px 12px rgba(0,0,0,0.5);
+  }
+  .ctrl-btn:hover {
+    background:var(--gold-dim);
+    border-color:var(--gold);
+    box-shadow:0 0 16px rgba(223,189,105,0.3);
+  }
+
+  /* ══ HISTORY PANEL ══ */
+  #history-panel {
+    position:fixed;
+    top:16px; right:16px;
+    z-index:9997;
+    background:rgba(10,10,15,0.95);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    width:220px;
+    max-height:340px;
+    overflow-y:auto;
+    display:none;
+    flex-direction:column;
+    gap:6px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.8);
+  }
+  #history-panel.open { display:flex; }
+  #history-panel::-webkit-scrollbar { width:3px; }
+  #history-panel::-webkit-scrollbar-track { background:transparent; }
+  #history-panel::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  .hist-title {
+    font-size:9px;
+    color:var(--gold);
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .hist-item {
+    background:rgba(255,255,255,0.02);
+    border-left:3px solid var(--gold);
+    padding:6px 10px;
+    border-radius:4px;
+    font-size:10px;
+    color:#ccc;
+    flex-shrink:0;
+  }
+  .hist-item.tai     { border-left-color:var(--tai);  color:var(--tai); }
+  .hist-item.xiu     { border-left-color:var(--xiu);  color:var(--xiu); }
+  .hist-item.special { border-left-color:var(--gold); color:var(--gold); }
+  .hist-item small   { color:#555; }
+
+  /* ══ RESPONSIVE ══ */
+  @media (max-width:380px) {
+    .api-card { padding:14px 16px; }
+    .card-icon { font-size:26px; }
+    .card-name { font-size:14px; }
+  }
+
+  /* Prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .led.on { animation: none !important; box-shadow:none !important; }
+    .loading-anim { animation: none !important; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ API SELECTOR SCREEN ══ -->
+<div class="screen" id="select-screen">
+  <div class="sel-header">
+    <div class="sel-logo">🎲</div>
+    <div class="sel-title">BETVIP</div>
+    <div class="sel-sub">AI Robot Tool · Chọn trò chơi</div>
+  </div>
+
+  <div class="api-cards">
+    <div class="api-card" role="button" tabindex="0" onclick="startTool('TX')" onkeydown="if(event.key==='Enter'||event.key===' ') { startTool('TX'); }">
+      <div class="card-icon">🎲</div>
+      <div class="card-info">
+        <div class="card-name">Tài Xỉu</div>
+        <div class="card-desc">Dự đoán TÀI / XỈU · Cập nhật 2s</div>
+      </div>
+      <div class="card-badge">TX</div>
+    </div>
+
+    <div class="api-card" role="button" tabindex="0" onclick="startTool('TXMD5')" onkeydown="if(event.key==='Enter'||event.key===' ') { startTool('TXMD5'); }">
+      <div class="card-icon">🟣</div>
+      <div class="card-info">
+        <div class="card-name">Tài Xỉu MD5</div>
+        <div class="card-desc">Dự đoán TX MD5 · Cập nhật 2s</div>
+      </div>
+      <div class="card-badge">MD5</div>
+    </div>
+  </div>
+
+  <div class="sel-footer">⚡ BETVIP · 2 API ENDPOINTS · AI PREDICTION</div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div class="screen hidden" id="game-screen">
+  <iframe id="game-frame" src="" allowfullscreen loading="lazy" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe>
+</div>
+<!-- ══ ROBOT WIDGET ══ -->
+<div id="robot-widget" onmousedown="dragStart(event)" ontouchstart="dragStart(event)"
+     tabindex="0" role="button" aria-label="Bot dự đoán" aria-pressed="false">
+  <div class="robot-inner">
+    <div class="robot-platform" id="robot-platform">BETVIP</div>
+    <img src="https://i.postimg.cc/rwkZQhxp/Robot.gif" class="robot-img" alt="AI Robot" draggable="false">
+    <div class="led-row">
+      <div class="led" id="led" aria-hidden="true"></div>
+      <div class="phien-label loading" id="phien-label">Phiên: --</div>
+    </div>
+    <div class="result-box" id="result-box">
+      <div class="result-label">DỰ ĐOÁN</div>
+      <div class="result-val loading-anim" id="result-val" aria-live="polite">SCAN</div>
+      <div class="result-sub" id="result-sub" aria-hidden="true"></div>
+      <div class="result-conf" id="result-conf" aria-hidden="true">Tin cậy: <span>--</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTROLS ══ -->
+<div id="ctrl-panel">
+  <button class="ctrl-btn" id="hist-btn" title="Lịch sử" onclick="toggleHistory()" aria-pressed="false">📊</button>
+  <button class="ctrl-btn" id="sound-btn" title="Âm thanh" onclick="toggleSound()">🔊</button>
+  <button class="ctrl-btn" title="Đổi game" onclick="goSelect()">🔄</button>
+</div>
+
+<!-- ══ HISTORY PANEL ══ -->
+<div id="history-panel" aria-hidden="true">
+  <div class="hist-title">📊 Lịch sử dự đoán</div>
+  <div id="hist-list" aria-live="polite"></div>
+</div>
+
+<script>
+/* ========================================================
+   Patched script:
+   - Safe DOM updates (no innerHTML from untrusted sources)
+   - AbortController for fetches
+   - Poll loop that avoids overlapping requests
+   - iframe sandbox + referrerpolicy
+   - Accessible robot widget (tabindex + keyboard)
+   - Prefers-reduced-motion respected in CSS
+   ======================================================== */
+
+/* ══ CONFIG ══ */
+const APIS = {
+  TX: {
+    label:   'BETVIP · TX',
+    type:    'TX',
+    url:     'https://betvip2x.hacksieucap.pro/huddd',
+    gameUrl: 'https://play.betvip.trade',
+    speak:   'Tài Xỉu BetVip'
+  },
+  TXMD5: {
+    label:   'BETVIP · TX MD5',
+    type:    'TX',
+    url:     'https://wtxmd52.tele68.com/v1/txmd5/sessions?cp=R&cl=R&pf=web&at=e2f4446802e76a39767a5bab32154970',
+    gameUrl: 'https://play.betvip.trade',
+    speak:   'Tài Xỉu MD5 BetVip'
+  }
+};
+// Public proxy used originally. Prefer to run your own server-side proxy for reliability and privacy.
+const PROXY    = 'https://api.allorigins.win/get?url=';
+const MAX_HIST = 20;
+
+/* ══ STATE ══ */
+const state = {
+  apiKey:       null,
+  lastPhien:    '',
+  soundEnabled: true,
+  history:      [],
+  pollTimer:    null,
+  pollInterval: 2000,
+  fetchController: null,
+  fetchFailures: 0,
+  running: false
+};
+
+/* ══ START / STOP ══ */
+function startTool(key) {
+  const api = APIS[key];
+  if (!api) return;
+
+  state.apiKey    = key;
+  state.lastPhien = '';
+  state.history   = [];
+  state.fetchFailures = 0;
+
+  // Switch screens
+  document.getElementById('select-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+
+  // Load game iframe (sandboxed)
+  const frame = document.getElementById('game-frame');
+  frame.src = api.gameUrl;
+
+  // Show robot + controls
+  document.getElementById('robot-platform').textContent = api.label;
+  document.getElementById('robot-widget').style.display = 'block';
+  document.getElementById('ctrl-panel').style.display   = 'flex';
+  // Clear history safely
+  document.getElementById('hist-list').textContent = '';
+  document.getElementById('history-panel').classList.remove('open');
+  document.getElementById('history-panel').setAttribute('aria-hidden', 'true');
+
+  resetResultUI();
+
+  // Start polling loop
+  state.running = true;
+  schedulePoll(0);
+
+  speak('Kích hoạt robot ' + api.speak);
+}
+
+function stopTool() {
+  state.running = false;
+  if (state.pollTimer) {
+    clearTimeout(state.pollTimer);
+    state.pollTimer = null;
+  }
+  if (state.fetchController) {
+    try { state.fetchController.abort(); } catch(e) {}
+    state.fetchController = null;
+  }
+}
+function goSelect() {
+  stopTool();
+  document.getElementById('robot-widget').style.display = 'none';
+  document.getElementById('ctrl-panel').style.display   = 'none';
+  document.getElementById('history-panel').classList.remove('open');
+  document.getElementById('history-panel').setAttribute('aria-hidden', 'true');
+  const frame = document.getElementById('game-frame');
+  frame.src = '';
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('select-screen').classList.remove('hidden');
+}
+
+/* ══ POLLING SCHEDULE ══ */
+function schedulePoll(delay) {
+  if (!state.running) return;
+  if (state.pollTimer) clearTimeout(state.pollTimer);
+  state.pollTimer = setTimeout(async () => {
+    await fetchPrediction();
+    // adapt interval based on failures (simple backoff)
+    const next = Math.min(15000, state.fetchFailures > 0 ? state.pollInterval * (1 + state.fetchFailures) : state.pollInterval);
+    schedulePoll(next);
+  }, delay);
+}
+
+/* ══ FETCH PREDICTION (safe) ══ */
+async function fetchPrediction() {
+  const api = APIS[state.apiKey];
+  if (!api) return;
+
+  // Abort previous controller if any
+  if (state.fetchController) {
+    try { state.fetchController.abort(); } catch(e) {}
+    state.fetchController = null;
+  }
+  const controller = new AbortController();
+  state.fetchController = controller;
+  const signal = controller.signal;
+
+  try {
+    const url = `${PROXY}${encodeURIComponent(api.url)}&t=${Date.now()}`;
+    const res = await fetch(url, { signal, cache: 'no-store' });
+    if (!res.ok) throw new Error('Network response not ok: ' + res.status);
+    const wrapped = await res.json();
+
+    if (!wrapped || typeof wrapped.contents !== 'string') {
+      throw new Error('Unexpected proxy response format');
+    }
+
+    let data;
+    try {
+      data = JSON.parse(wrapped.contents);
+    } catch (err) {
+      console.warn('Invalid JSON from upstream API', err);
+      throw new Error('Invalid JSON from upstream API');
+    }
+
+    // success
+    state.fetchFailures = 0;
+    handleData(data);
+  } catch (err) {
+    console.warn('fetchPrediction error:', err);
+    state.fetchFailures = Math.min(10, state.fetchFailures + 1);
+    // show a transient error in UI, but avoid XSS
+    const valEl = document.getElementById('result-val');
+    if (valEl) valEl.textContent = 'ERR';
+  } finally {
+    state.fetchController = null;
+  }
+}
+/* ══ HANDLE DATA (safe DOM updates) ══ */
+function handleData(data) {
+  if (!data || typeof data !== 'object') return;
+
+  // Check if this is MD5 API data (contains multiple Phien entries)
+  const api = APIS[state.apiKey];
+  const isMD5API = api && api.url.includes('txmd5');
+  
+  if (isMD5API) {
+    handleMD5Data(data);
+    return;
+  }
+
+  // Handle regular TX API data
+  const phien = String(data.Phien_nay || data.phien || data.session || data.id || '');
+  const raw   = String(data.Dudoan || data.dudoan || data.predict || data.result || '');
+  const conf  = String(data.Dotincay || data.dotincay || data.confidence || data.rate || '');
+
+  if (!raw) return;
+
+  // Update phien & confidence safely
+  const phienEl = document.getElementById('phien-label');
+  phienEl.classList.remove('loading');
+  phienEl.textContent = 'Phiên: ' + (phien || '--');
+  if (!phien) phienEl.classList.add('loading');
+
+  const confEl = document.getElementById('result-conf');
+  // Clear and append safe nodes
+  confEl.textContent = 'Tin cậy: ';
+  const span = document.createElement('span');
+  span.textContent = conf || '--';
+  confEl.appendChild(span);
+
+  // Skip render if same phien to avoid duplicates
+  if (phien && phien === state.lastPhien) return;
+  state.lastPhien = phien;
+
+  const led = document.getElementById('led');
+  const box = document.getElementById('result-box');
+  const val = document.getElementById('result-val');
+  const sub = document.getElementById('result-sub');
+
+  // Reset classes and text safely
+  val.classList.remove('loading-anim');
+  box.className = 'result-box';
+  val.className = 'result-val';
+  sub.className = 'result-sub';
+  sub.textContent = '';
+  led.classList.add('on');
+
+  const upper = raw.toUpperCase();
+  const isTai = upper.includes('TAI') || upper.includes('TÀI') || upper === 'T' || upper.startsWith('T ');
+  const isXiu = upper.includes('XIU') || upper.includes('XỈU') || upper === 'X' || upper.startsWith('X ');
+
+  if (isTai) {
+    box.classList.add('tai');
+    val.classList.add('tai');
+    val.textContent = 'TÀI';
+    sub.classList.add('tai');
+    sub.textContent = '▲ OVER';
+    speak('Tài');
+    addHistory(phien, 'TÀI', conf, 'tai');
+  } else if (isXiu) {
+    box.classList.add('xiu');
+    val.classList.add('xiu');
+    val.textContent = 'XỈU';
+    sub.classList.add('xiu');
+    sub.textContent = '▼ UNDER';
+    speak('Xỉu');
+    addHistory(phien, 'XỈU', conf, 'xiu');
+  } else {
+    box.classList.add('special');
+    val.classList.add('special');
+    // limit content length and set as text to avoid injection
+    val.textContent = raw.substring(0, 100);
+    speak(raw);
+    addHistory(phien, raw, conf, 'special');
+  }
+}
+
+/* ══ HANDLE MD5 DATA ══ */
+function handleMD5Data(data) {
+  try {
+    // Parse the raw string data - it contains multiple "Phien" entries
+    let rawText = '';
+    if (typeof data === 'string') {
+      rawText = data;
+    } else if (data.data || data.content || data.response) {
+      rawText = data.data || data.content || data.response;
+    } else {
+      rawText = JSON.stringify(data);
+    }
+
+    console.log('MD5 API data:', rawText);
+
+    // Extract all Phien entries using regex
+    const phienPattern = /"Phien":(\d+):\s*([a-f0-9]{32})\s*(\d+)\s*(tai|xiu)/gi;
+    const matches = [...rawText.matchAll(phienPattern)];
+    
+    if (!matches.length) {
+      console.warn('No valid Phien entries found in MD5 API response');
+      return;
+    }
+
+    // Get the latest entry (last in the list)
+    const latestMatch = matches[matches.length - 1];
+    const phien = latestMatch[1];
+    const hash = latestMatch[2];
+    const diceSum = parseInt(latestMatch[3]);
+    const result = latestMatch[4].toLowerCase();
+
+    // Skip if same phien
+    if (phien && phien === state.lastPhien) {
+      return;
+    }
+
+    // Calculate confidence based on dice sum patterns
+    let confidence = 65; // base confidence
+    if (diceSum <= 6 || diceSum >= 15) confidence = 85; // extreme values
+    else if (diceSum <= 8 || diceSum >= 13) confidence = 75; // strong values
+    else confidence = 70; // moderate values
+
+    // Update phien display
+    const phienEl = document.getElementById('phien-label');
+    phienEl.classList.remove('loading');
+    phienEl.textContent = 'Phiên: ' + phien;
+
+    // Update confidence display
+    const confEl = document.getElementById('result-conf');
+    confEl.textContent = 'Tin cậy: ';
+    const span = document.createElement('span');
+    span.textContent = confidence + '%';
+    confEl.appendChild(span);
+
+    state.lastPhien = phien;
+
+    const led = document.getElementById('led');
+    const box = document.getElementById('result-box');
+    const val = document.getElementById('result-val');
+    const sub = document.getElementById('result-sub');
+
+    // Reset classes and text safely
+    val.classList.remove('loading-anim');
+    box.className = 'result-box';
+    val.className = 'result-val';
+    sub.className = 'result-sub';
+    sub.textContent = '';
+    led.classList.add('on');
+
+    const isTai = result === 'tai';
+    const isXiu = result === 'xiu';
+
+    if (isTai) {
+      box.classList.add('tai');
+      val.classList.add('tai');
+      val.textContent = 'TÀI';
+      sub.classList.add('tai');
+      sub.textContent = `▲ OVER (${diceSum})`;
+      speak('Tài');
+      addHistory(phien, 'TÀI', confidence + '%', 'tai', hash);
+    } else if (isXiu) {
+      box.classList.add('xiu');
+      val.classList.add('xiu');
+      val.textContent = 'XỈU';
+      sub.classList.add('xiu');
+      sub.textContent = `▼ UNDER (${diceSum})`;
+      speak('Xỉu');
+      addHistory(phien, 'XỈU', confidence + '%', 'xiu', hash);
+    }
+
+    console.log('Processed MD5 prediction:', {
+      phien,
+      result: result.toUpperCase(),
+      diceSum,
+      hash: hash.substring(0, 16) + '...',
+      confidence
+    });
+
+  } catch (error) {
+    console.error('Error processing MD5 API response:', error);
+  }
+}
+/* ══ HISTORY (safe rendering) ══ */
+function addHistory(phien, pred, conf, cls, hash) {
+  state.history.unshift({
+    phien: String(phien || ''),
+    pred: String(pred || ''),
+    conf: String(conf || ''),
+    cls: String(cls || ''),
+    hash: String(hash || ''),
+    time: new Date().toLocaleTimeString('vi-VN')
+  });
+  if (state.history.length > MAX_HIST) state.history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('hist-list');
+  list.textContent = '';
+  state.history.forEach(h => {
+    const d = document.createElement('div');
+    d.className = 'hist-item ' + h.cls;
+
+    const strong = document.createElement('strong');
+    strong.textContent = '#' + h.phien;
+
+    const text = document.createTextNode(' — ' + h.pred);
+    const br = document.createElement('br');
+
+    const small = document.createElement('small');
+    small.textContent = `${h.time} · ${h.conf}`;
+
+    d.appendChild(strong);
+    d.appendChild(text);
+    d.appendChild(br);
+    
+    // Add hash info if available (for MD5 predictions)
+    if (h.hash) {
+      const hashDiv = document.createElement('div');
+      hashDiv.style.fontSize = '8px';
+      hashDiv.style.color = '#666';
+      hashDiv.style.fontFamily = 'monospace';
+      hashDiv.textContent = '🔐 ' + h.hash.substring(0, 16) + '...';
+      d.appendChild(hashDiv);
+    }
+    
+    d.appendChild(small);
+
+    list.appendChild(d);
+  });
+}
+
+/* ══ UI HELPERS ══ */
+function resetResultUI() {
+  const val = document.getElementById('result-val');
+  if (val) {
+    val.textContent  = 'SCAN';
+    val.className  = 'result-val loading-anim';
+  }
+  const box = document.getElementById('result-box');
+  if (box) box.className  = 'result-box';
+  const sub = document.getElementById('result-sub');
+  if (sub) { sub.textContent  = ''; sub.className  = 'result-sub'; }
+  const led = document.getElementById('led');
+  if (led) led.className = 'led';
+  const phien = document.getElementById('phien-label');
+  if (phien) { phien.textContent = 'Phiên: --'; phien.classList.add('loading'); }
+  const conf = document.getElementById('result-conf');
+  if (conf) {
+    conf.textContent = 'Tin cậy: ';
+    const s = document.createElement('span'); s.textContent = '--'; conf.appendChild(s);
+  }
+}
+/* ══ HISTORY / SOUND CONTROLS ══ */
+function toggleHistory() {
+  const panel = document.getElementById('history-panel');
+  const btn = document.getElementById('hist-btn');
+  const isOpen = panel.classList.toggle('open');
+  panel.setAttribute('aria-hidden', String(!isOpen));
+  btn.setAttribute('aria-pressed', String(isOpen));
+}
+
+function toggleSound() {
+  state.soundEnabled = !state.soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.style.opacity = state.soundEnabled ? '1' : '0.4';
+  if (state.soundEnabled) speak('Âm thanh bật');
+}
+
+/* ══ SPEECH (throttled and feature-checked) ══ */
+function speak(text) {
+  if (!state.soundEnabled || !text) return;
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+  try {
+    window.speechSynthesis.cancel(); // cancel previous to avoid queue build-up
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'vi-VN';
+    u.rate = 1.05;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    console.warn('Speech synthesis failed', e);
+  }
+}
+
+/* ══ DRAG (mouse/touch) ══ */
+const widget = document.getElementById('robot-widget');
+let _ox = 0, _oy = 0, _drag = false;
+
+function dragStart(e) {
+  _drag = true;
+  const ev = e.touches ? e.touches[0] : e;
+  _ox = ev.clientX - widget.offsetLeft;
+  _oy = ev.clientY - widget.offsetTop;
+  // for touch, prevent default to avoid scrolling while dragging
+  if (e.touches) e.preventDefault();
+}
+
+document.addEventListener('mousemove', dragMove);
+document.addEventListener('touchmove', dragMove, { passive: false });
+document.addEventListener('mouseup',   () => { _drag = false; });
+document.addEventListener('touchend',  () => { _drag = false; });
+
+function dragMove(e) {
+  if (!_drag) return;
+  e.preventDefault();
+  const ev = e.touches ? e.touches[0] : e;
+  const x = Math.max(0, Math.min(ev.clientX - _ox, window.innerWidth  - widget.offsetWidth));
+  const y = Math.max(0, Math.min(ev.clientY - _oy, window.innerHeight - widget.offsetHeight));
+  widget.style.left = x + 'px';
+  widget.style.top  = y + 'px';
+}
+/* Keyboard support for widget: Enter toggles history */
+widget.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' || ev.key === ' ') {
+    ev.preventDefault();
+    toggleHistory();
+  } else if (ev.key === 'Escape') {
+    // move focus away and hide history
+    document.activeElement.blur();
+    document.getElementById('history-panel').classList.remove('open');
+    document.getElementById('history-panel').setAttribute('aria-hidden', 'true');
+  }
+});
+
+/* Make sure controls are keyboard friendly */
+document.getElementById('hist-btn').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleHistory(); }
+});
+
+/* Accessibility: expose a cleanup when page is hidden */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // stop polling to save resources
+    stopTool();
+  }
+});
+</script>
+</body>
+</html>
