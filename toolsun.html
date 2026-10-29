@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 20px; }
+        p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; margin: 20px 0; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .overlay.active { display: flex; }
+        .overlay-content { background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; background: none; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 Overlay Demo</h1>
+        <p>Trình diễn các loại overlay tương tác trên trang web. Overlay là kỹ thuật hiển thị nội dung phủ lên trang mà không cần chuyển trang.</p>
+        
+        <div class="controls">
+            <button class="btn-primary" onclick="showOverlay('standard')">Overlay Tiêu Chuẩn</button>
+            <button class="btn-secondary" onclick="showOverlay('success')">Overlay Thành Công</button>
+            <button class="btn-warning" onclick="showOverlay('warning')">Overlay Cảnh Báo</button>
+            <button class="btn-danger" onclick="showOverlay('error')">Overlay Lỗi</button>
+        </div>
+        
+        <p>Nhấn vào các nút bên trên để xem các loại overlay khác nhau. Nhấn nút đóng (×) hoặc nhấn ra ngoài overlay để tắt.</p>
+    </div>
+    
+    <div id="overlay-standard" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="hideOverlay('standard')">×</button>
+            <h2>📋 Overlay Tiêu Chuẩn</h2>
+            <p>Đây là overlay tiêu chuẩn với các tính năng cơ bản.</p>
+            <p>Sử dụng cho các thông báo thông thường, hướng dẫn, hoặc nội dung bổ sung.</p>
+        </div>
+    </div>
+    
+    <div id="overlay-success" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="hideOverlay('success')">×</button>
+            <h2>✅ Thao tác Thành Công!</h2>
+            <p>Chúc mừng! Thao tác của bạn đã được thực hiện thành công.</p>
+        </div>
+    </div>
+    
+    <div id="overlay-warning" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="hideOverlay('warning')">×</button>
+            <h2>⚠️ Cảnh Báo</h2>
+            <p>Vui lòng xem xét kỹ thao tác này trước khi tiếp tục.</p>
+        </div>
+    </div>
+    
+    <div id="overlay-error" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="hideOverlay('error')">×</button>
+            <h2>❌ Đã xảy ra lỗi</h2>
+            <p>Rất tiếc, đã có lỗi xảy ra trong quá trình xử lý.</p>
+        </div>
+    </div>
+    
+    <script>
+        function showOverlay(type) {
+            document.getElementById('overlay-' + type).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function hideOverlay(type) {
+            document.getElementById('overlay-' + type).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.querySelectorAll('.overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    const type = this.id.replace('overlay-', '');
+                    hideOverlay(type);
+                }
+            });
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.overlay').forEach(overlay => {
+                    overlay.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>
